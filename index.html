@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MAHIM OFFICIAL - PREMIUM ACCESS</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Rajdhani:wght@500;700&display=swap');
+        :root { --primary: #9333ea; --primary-glow: rgba(147, 51, 234, 0.5); --bg: #040108; }
+        body { background-color: var(--bg); color: #fff; font-family: 'Rajdhani', sans-serif; overflow-x: hidden; -webkit-user-select: none; user-select: none; }
+        body::before { content: " "; display: block; position: fixed; top: 0; left: 0; bottom: 0; right: 0; background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.1) 50%), linear-gradient(90deg, rgba(147, 51, 234, 0.03), rgba(0, 255, 0, 0.01), rgba(0, 0, 255, 0.03)); z-index: 9999; background-size: 100% 3px, 3px 100%; pointer-events: none; }
+        input, select { -webkit-user-select: text !important; user-select: text !important; cursor: text; }
+        .orbitron { font-family: 'Orbitron', sans-serif; }
+        .glass-card { background: rgba(15, 5, 25, 0.85); border: 1px solid rgba(147, 51, 234, 0.3); border-radius: 28px; box-shadow: 0 0 40px rgba(0, 0, 0, 0.8); backdrop-filter: blur(12px); }
+        .input-box { background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 16px; transition: 0.3s; }
+        .input-box:focus-within { border-color: var(--primary); background: rgba(147, 51, 234, 0.08); box-shadow: 0 0 15px var(--primary-glow); }
+        .btn-main { background: linear-gradient(135deg, #a855f7, #581c87); transition: 0.3s; }
+        .btn-main:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(147, 51, 234, 0.5); }
+        .btn-outline { background: transparent; border: 1px solid #7e22ce; color: #c084fc; transition: 0.3s; }
+        .btn-outline:hover { background: #7e22ce; color: white; box-shadow: 0 8px 25px rgba(147, 51, 234, 0.3); }
+        #toast { position: fixed; top: 25px; left: 50%; transform: translateX(-50%); padding: 14px 45px; border-radius: 16px; font-weight: bold; display: none; z-index: 10001; animation: slideDown 0.4s cubic-bezier(0.18, 0.89, 0.32, 1.28); }
+        @keyframes slideDown { from { opacity: 0; transform: translate(-50%, -30px); } to { opacity: 1; transform: translate(-50%, 0); } }
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.8); backdrop-filter: blur(10px); z-index: 10000; display: flex; align-items: center; justify-content: center; }
+        .hidden { display: none; }
+    </style>
+</head>
+<body class="p-4">
+
+    <!-- Admin Login Modal -->
+    <div id="adminLoginModal" class="modal-overlay hidden">
+        <div class="glass-card w-full max-w-sm p-8 text-center space-y-6 relative">
+             <button onclick="closeAdminLoginModal()" class="absolute top-4 right-4 text-gray-400 hover:text-white text-2xl">&times;</button>
+            <h2 class="text-3xl font-bold orbitron text-purple-400">ADMIN LOGIN</h2>
+            <div class="input-box p-4 flex items-center">
+                <i class="fas fa-key text-purple-500/60 mr-4 text-base"></i>
+                <input type="password" id="adminPassword" placeholder="ADMIN PASSWORD দিন" class="bg-transparent w-full outline-none text-sm tracking-widest">
+            </div>
+            <button onclick="handleAdminLogin()" class="btn-main w-full py-4 rounded-2xl font-bold uppercase text-sm tracking-[2px]">Authenticate</button>
+        </div>
+    </div>
+    
+    <!-- Admin Panel Modal -->
+    <div id="adminPanelModal" class="modal-overlay hidden">
+         <div class="glass-card w-full max-w-lg p-6 space-y-4 relative">
+             <button onclick="closeAdminPanelModal()" class="absolute top-4 right-4 text-gray-400 hover:text-white text-2xl">&times;</button>
+             <h2 class="text-lg font-bold orbitron text-purple-400">ADMIN PANEL</h2>
+             <div class="bg-black/20 p-4 rounded-lg space-y-4">
+                 <h3 class="font-bold text-sm uppercase tracking-widest">নতুন ইউজার টোকেন তৈরি করুন</h3>
+                 <div class="flex gap-4 items-center">
+                    <input type="number" id="tokenDurationInput" placeholder="টোকেনের মেয়াদ (দিন)" class="input-box bg-transparent w-full outline-none text-sm tracking-widest p-3">
+                    <button onclick="createAdminToken()" class="btn-main w-1/2 py-3 rounded-xl text-xs font-bold">GENERATE</button>
+                 </div>
+                 <div id="newTokenDisplay" class="input-box p-3 text-center hidden mt-3">
+                     <p id="generatedToken" class="font-mono cursor-pointer" onclick="copyToClipboard(this.innerText)"></p>
+                 </div>
+             </div>
+             <div class="bg-black/20 p-4 rounded-lg space-y-2">
+                 <h3 class="font-bold text-sm uppercase tracking-widest">সক্রিয় ইউজার টোকেন</h3>
+                 <div id="tokenList" class="max-h-48 overflow-y-auto text-xs space-y-2"></div>
+             </div>
+         </div>
+    </div>
+    
+    <!-- Token Redeem Modal for Logged-in Users -->
+    <div id="redeemModal" class="modal-overlay hidden">
+        <div class="glass-card w-full max-w-sm p-8 text-center space-y-6 relative">
+             <button onclick="closeRedeemModal()" class="absolute top-4 right-4 text-gray-400 hover:text-white text-2xl">&times;</button>
+            <h2 class="text-2xl orbitron font-bold text-purple-300">নতুন অ্যাক্সেস কী রিডিম করুন</h2>
+            <p class="text-sm text-gray-300">আপনার অ্যাক্সেসের মেয়াদ বাড়াতে নতুন কী লিখুন।</p>
+            <div class="input-box p-4 flex items-center">
+                <i class="fas fa-ticket-alt text-purple-500/60 mr-4 text-base"></i>
+                <input type="text" id="redeemTokenInput" placeholder="এখানে নতুন কী লিখুন" class="bg-transparent w-full outline-none text-sm tracking-widest text-center">
+            </div>
+            <button onclick="handleRedeem()" class="btn-main w-full py-4 rounded-2xl font-bold uppercase text-sm tracking-[2px]">রিডিম করুন</button>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div id="mainContent" class="flex flex-col items-center">
+        <div class="fixed top-4 right-4 flex gap-3 z-50">
+             <button id="adminIcon" class="w-12 h-12 bg-gray-800/50 border border-gray-600 rounded-full text-gray-400 hover:text-white transition-colors"><i class="fas fa-cog"></i></button>
+        </div>
+
+        <div class="w-full max-w-md mt-6 space-y-6">
+            <div class="text-center">
+                <h1 class="text-5xl font-bold orbitron tracking-tighter text-purple-500 drop-shadow-[0_0_20px_rgba(147,51,234,0.6)]">MAHIM <span class="text-white">PREMIUM</span></h1>
+                <p class="text-[10px] text-gray-400 uppercase tracking-[7px] mt-2 font-bold">Mahim Offcial Infrastructure</p>
+            </div>
+
+            <!-- Access Status Bar -->
+            <div id="accessStatus" class="text-center text-xs font-bold p-2 rounded-lg"></div>
+            
+            <!-- ====== USER ACTION PANEL (Hidden for Guests) ====== -->
+            <div id="actionPanel" class="hidden">
+                <div class="glass-card p-6 space-y-5">
+                    <div class="input-box p-4 flex items-center">
+                        <i class="fas fa-crosshairs text-purple-500/60 mr-4 text-base"></i>
+                        <input type="text" id="f_target" placeholder="টার্গেট UID লিখুন" class="bg-transparent w-full outline-none text-sm tracking-widest">
+                    </div>
+                    
+                    <div>
+                        <p class="text-[10px] text-purple-400 font-bold uppercase tracking-widest mb-2 ml-2">অ্যাকশন সিলেক্ট করুন</p>
+                        <select id="actionType" onchange="toggleTimerVisibility()" class="input-box bg-transparent w-full h-full outline-none text-sm tracking-widest rounded-2xl p-4 cursor-pointer">
+                           <option value="add" class="bg-purple-900" selected>বন্ধু যোগ করুন (Add Friend)</option>
+                           <option value="remove" class="bg-purple-900">বন্ধু রিমুভ করুন (Remove Friend)</option>
+                        </select>
+                    </div>
+
+                    <!-- Auto-Remove Timer Section (Simplified) -->
+                    <div id="autoRemoveSection" class="pt-2">
+                        <p class="text-[10px] text-purple-400 font-bold uppercase tracking-widest mb-3 ml-2">Auto-Remove Timer</p>
+                        <div class="flex items-center gap-3">
+                             <input type="number" id="duration_value" placeholder="সময়" class="input-box bg-transparent w-full outline-none text-sm tracking-widest p-4">
+                             <span class="bg-black/20 py-4 px-6 rounded-2xl text-sm font-bold">দিন</span>
+                             <input type="hidden" id="duration_unit" value="days"> <!-- JS will use this -->
+                        </div>
+                    </div>
+                    
+                    <div class="grid grid-cols-2 gap-3 pt-2">
+                         <button onclick="addWithPreset(7)" class="btn-outline py-3 rounded-xl font-bold uppercase text-[10px]">৭ দিনের জন্য যোগ করুন</button>
+                         <button onclick="addWithPreset(1)" class="btn-outline py-3 rounded-xl font-bold uppercase text-[10px]">১ দিনের জন্য যোগ করুন</button>
+                    </div>
+
+                    <div class="pt-2">
+                        <button onclick="executeAction()" class="btn-main w-full py-4 rounded-2xl font-bold uppercase text-sm tracking-[2px]"><i class="fas fa-bolt mr-2"></i> সাবমিট করুন</button>
+                    </div>
+                    
+                    <div class="pt-2">
+                        <button onclick="openRedeemModal()" class="btn-outline w-full py-3 rounded-xl font-bold uppercase text-xs tracking-[2px] mt-3">নতুন কী রিডিম করুন</button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- ====== GUEST REDEEM PANEL (Shown only for Guests) ====== -->
+            <div id="redeemPanel" class="hidden">
+                <div class="glass-card p-8 space-y-5 text-center">
+                    <h2 class="text-2xl orbitron font-bold text-purple-300">প্রিমিয়াম অ্যাক্সেস নিন</h2>
+                    <p class="text-sm text-gray-300">সকল ফিচার আনলক করতে অ্যাডমিনের দেওয়া একটি বৈধ অ্যাক্সেস কী (টোকেন) লিখুন।</p>
+                    <div class="input-box p-4 flex items-center">
+                        <i class="fas fa-ticket-alt text-purple-500/60 mr-4 text-base"></i>
+                        <input type="text" id="userTokenInput" placeholder="অ্যাক্সেস কী লিখুন" class="bg-transparent w-full outline-none text-sm tracking-widest text-center">
+                    </div>
+                    <button onclick="redeemToken()" class="btn-main w-full py-4 rounded-2xl font-bold uppercase text-sm tracking-[2px]">কী রিডিম করুন</button>
+                </div>
+            </div>
+
+            <!-- Common Panels for All Users -->
+            <div class="glass-card p-6 space-y-4">
+                 <h2 class="text-[10px] font-bold orbitron uppercase text-purple-300 tracking-widest border-b border-purple-900/40 pb-4"><i class="fas fa-history mr-2"></i>অ্যাক্টিভিটি লগ</h2>
+                 <div id="historyLogContainer" class="space-y-3 max-h-60 overflow-y-auto pr-2"><p class="text-center text-xs text-gray-500 py-4">এখনও কোনো কার্যকলাপ রেকর্ড করা হয়নি...</p></div>
+            </div>
+            
+             <div class="glass-card p-6 space-y-4">
+                <h2 class="text-[10px] font-bold orbitron uppercase text-purple-300 tracking-widest border-b border-purple-900/40 pb-4"><i class="fas fa-server mr-2"></i>API রেসপন্স</h2>
+                <div class="bg-black/30 p-4 rounded-lg"><pre class="text-xs text-gray-300 whitespace-pre-wrap break-all" id="apiResponseOutput">সার্ভারের উত্তরের জন্য অপেক্ষা করা হচ্ছে...</pre></div>
+            </div>
+            
+            <div class="text-center pb-8"><p class="text-[9px] text-purple-600/70 uppercase tracking-[5px] font-bold">MAHIM Infrastructure • Mahim Offcial</p></div>
+        </div>
+    </div>
+    <div id="toast"></div>
+
+    <script>
+        // --- CONFIGURATION ---
+        const ADMIN_PASSWORD = "MahimOfficial@Admin#24";
+        const GUEST_VALIDITY_DAYS = 1;
+        const SOURCE_UID = '4181116530';
+        const SOURCE_PASS = '4335EC38AF2212F98DD633BBCEE59AFA4164C28FA1CD9585A246BD1F5622A385';
+
+        // --- AUTHENTICATION & SESSION ---
+        window.onload = function() {
+            checkAuth();
+            loadHistory();
+        };
+
+        function checkAuth() {
+            let session = JSON.parse(localStorage.getItem('mahim_session'));
+            if (!session || session.expiry < Date.now()) {
+                session = createGuestSession();
+                showNotify(`স্বাগতম! আপনি ${GUEST_VALIDITY_DAYS} দিনের জন্য বিনামূল্যে গেস্ট অ্যাক্সেস পেয়েছেন।`, "success");
+            }
+            updateUIBasedOnRole(session);
+        }
+
+        function createGuestSession() {
+            const expiry = Date.now() + (GUEST_VALIDITY_DAYS * 24 * 60 * 60 * 1000);
+            const guestSession = { role: 'guest', expiry };
+            localStorage.setItem('mahim_session', JSON.stringify(guestSession));
+            return guestSession;
+        }
+        
+        function updateUIBasedOnRole(session) {
+            const statusEl = document.getElementById('accessStatus');
+            const actionPanel = document.getElementById('actionPanel');
+            const redeemPanel = document.getElementById('redeemPanel');
+            const expiryDate = new Date(session.expiry).toLocaleString('bn-BD');
+
+            if (session.role === 'admin' || session.role === 'user') {
+                actionPanel.classList.remove('hidden');
+                redeemPanel.classList.add('hidden');
+                toggleTimerVisibility(); // Show/hide timer based on selection
+                if (session.role === 'admin') {
+                    statusEl.innerHTML = `<i class="fas fa-user-shield mr-2"></i> অ্যাডমিন অ্যাক্সেস`;
+                    statusEl.className = 'text-center text-xs font-bold p-2 rounded-lg bg-purple-500/20 text-purple-300';
+                } else {
+                    statusEl.innerHTML = `<i class="fas fa-check-circle mr-2"></i> প্রিমিয়াম অ্যাক্সেস (মেয়াদ শেষ হবে: ${expiryDate})`;
+                    statusEl.className = 'text-center text-xs font-bold p-2 rounded-lg bg-green-500/20 text-green-300';
+                }
+            } else { // Guest
+                 statusEl.innerHTML = `<i class="fas fa-user-clock mr-2"></i> গেস্ট অ্যাক্সেস (মেয়াদ শেষ হবে: ${expiryDate})`;
+                 statusEl.className = 'text-center text-xs font-bold p-2 rounded-lg bg-yellow-500/20 text-yellow-300';
+                 actionPanel.classList.add('hidden');
+                 redeemPanel.classList.remove('hidden');
+            }
+        }
+        
+        function handleAdminLogin() {
+            const input = document.getElementById('adminPassword').value;
+            if (input === ADMIN_PASSWORD) {
+                const session = {
+                    role: 'admin',
+                    expiry: Date.now() + (365 * 24 * 60 * 60 * 1000)
+                };
+                localStorage.setItem('mahim_session', JSON.stringify(session));
+                showNotify("অ্যাডমিন লগইন সফল হয়েছে!", "success");
+                closeAdminLoginModal();
+                window.location.reload();
+            } else {
+                 showNotify("অ্যাডমিন পাসওয়ার্ড ভুল!", "error");
+            }
+        }
+
+        // --- MODAL CONTROLS ---
+        function openAdminLoginModal() { document.getElementById('adminLoginModal').classList.remove('hidden'); }
+        function closeAdminLoginModal() { document.getElementById('adminLoginModal').classList.add('hidden'); }
+        function openAdminPanelModal() { displayTokens(); document.getElementById('adminPanelModal').classList.remove('hidden'); }
+        function closeAdminPanelModal() { document.getElementById('adminPanelModal').classList.add('hidden'); }
+        function openRedeemModal() { document.getElementById('redeemModal').classList.remove('hidden'); }
+        function closeRedeemModal() { document.getElementById('redeemModal').classList.add('hidden'); }
+        
+        document.getElementById('adminIcon').onclick = () => {
+             let session = JSON.parse(localStorage.getItem('mahim_session'));
+             if(session && session.role === 'admin') {
+                 openAdminPanelModal();
+             } else {
+                 openAdminLoginModal();
+             }
+        };
+
+        // --- TOKEN MANAGEMENT ---
+        function getTokens() { return JSON.parse(localStorage.getItem('mahim_tokens')) || []; }
+        function saveTokens(tokens) { localStorage.setItem('mahim_tokens', JSON.stringify(tokens)); }
+        
+        function redeemToken() {
+            const userTokenInput = document.getElementById('userTokenInput').value;
+            processToken(userTokenInput);
+        }
+
+        function handleRedeem() {
+            const userTokenInput = document.getElementById('redeemTokenInput').value;
+            processToken(userTokenInput, true);
+        }
+
+        function processToken(tokenKey, fromModal = false) {
+            if(!tokenKey) return showNotify("অনুগ্রহ করে একটি অ্যাক্সেস কী লিখুন।", "error");
+
+            const tokens = getTokens();
+            const token = tokens.find(t => t.key === tokenKey && t.expiry > Date.now());
+            
+            if (token) {
+                const session = { role: 'user', token: token.key, expiry: token.expiry };
+                localStorage.setItem('mahim_session', JSON.stringify(session));
+                const message = fromModal ? "সফল! আপনার প্রিমিয়াম অ্যাক্সেস বাড়ানো হয়েছে।" : "কী গৃহীত হয়েছে! প্রিমিয়াম অ্যাক্সেস চালু হলো।";
+                showNotify(message, "success");
+                
+                if(fromModal) closeRedeemModal();
+                
+                setTimeout(() => window.location.reload(), 1500);
+            } else {
+                showNotify("অবৈধ বা মেয়াদোত্তীর্ণ অ্যাক্সেস কী।", "error");
+            }
+        }
+
+        function createAdminToken() {
+             const durationDays = parseInt(document.getElementById('tokenDurationInput').value);
+             if (!durationDays || durationDays <= 0) {
+                 return showNotify("দয়া করে দিনের সংখ্যা সঠিকভাবে লিখুন।", "error");
+             }
+
+             const key = "MAHIM-" + [...Array(3)].map(() => Math.random().toString(36).substring(2, 6).toUpperCase()).join('-');
+             const expiry = Date.now() + (durationDays * 24 * 60 * 60 * 1000);
+             const tokens = getTokens();
+             tokens.push({ key, expiry });
+             saveTokens(tokens);
+             
+             const tokenDisplayParent = document.getElementById('newTokenDisplay');
+             const tokenDisplay = document.getElementById('generatedToken');
+             tokenDisplayParent.classList.remove('hidden');
+             tokenDisplay.innerText = key;
+             showNotify(`${durationDays}-দিনের একটি নতুন টোকেন তৈরি হয়েছে!`, "success");
+             displayTokens();
+        }
+
+        function deleteToken(key) {
+            let tokens = getTokens();
+            tokens = tokens.filter(t => t.key !== key);
+            saveTokens(tokens);
+            displayTokens();
+            showNotify("টোকেন মুছে ফেলা হয়েছে!", "success");
+        }
+
+        function displayTokens() {
+            const tokenList = document.getElementById('tokenList');
+            let tokens = getTokens().filter(t => t.expiry > Date.now());
+            saveTokens(tokens); 
+
+            tokenList.innerHTML = "";
+            if (tokens.length === 0) { 
+                tokenList.innerHTML = '<p class="text-center text-xs text-gray-500 p-2">কোনো সক্রিয় টোকেন নেই।</p>'; 
+                return; 
+            }
+
+            tokens.sort((a, b) => b.expiry - a.expiry).forEach(t => {
+                const expiryDate = new Date(t.expiry).toLocaleString('bn-BD');
+                const element = document.createElement('div');
+                element.className = 'flex justify-between items-center bg-black/30 p-2 rounded-lg';
+                element.innerHTML = `
+                    <div>
+                        <p class="font-mono text-purple-300 cursor-pointer" onclick="copyToClipboard('${t.key}')">${t.key}</p>
+                        <p class="text-gray-400 text-[10px]">মেয়াদ শেষ হবে: ${expiryDate}</p>
+                    </div>
+                    <button onclick="deleteToken('${t.key}')" class="text-red-500 hover:text-red-400 text-lg px-2">&times;</button>
+                `;
+                tokenList.appendChild(element);
+            });
+        }
+        
+        // --- UI HELPER ---
+        function toggleTimerVisibility() {
+            const action = document.getElementById('actionType').value;
+            const timerSection = document.getElementById('autoRemoveSection');
+            if (action === 'remove') {
+                timerSection.classList.add('hidden');
+            } else {
+                timerSection.classList.remove('hidden');
+            }
+        }
+
+        // --- MAIN APP LOGIC (API CALLS) ---
+        async function executeAction() {
+            const type = document.getElementById('actionType').value;
+            const targetUid = document.getElementById('f_target').value;
+            if (!targetUid) return showNotify("টার্গেট UID আবশ্যক!", "error");
+            
+            document.getElementById('apiResponseOutput').textContent = 'অনুরোধ প্রক্রিয়া করা হচ্ছে...';
+            const finalUrl = `https://add-remove-mahim-offcial-api.vercel.app/${type === 'add' ? 'adding' : 'remove'}_friend?uid=${SOURCE_UID}&password=${SOURCE_PASS}&friend_uid=${targetUid}`;
+            
+            showNotify(`${type.toUpperCase()} অনুরোধ পাঠানো হচ্ছে...`, "success");
+            saveHistoryEntry(type, SOURCE_UID, targetUid);
+
+            try {
+                const response = await fetch(finalUrl);
+                const data = await response.json();
+                document.getElementById('apiResponseOutput').textContent = JSON.stringify(data, null, 2);
+                showNotify(data.message || "অনুরোধ প্রক্রিয়া সম্পন্ন!", response.ok && data.status ? "success" : "error");
+
+                if (type === 'add' && response.ok && data.status) {
+                    let durationValue = parseInt(document.getElementById('duration_value').value);
+                    if (!isNaN(durationValue) && durationValue > 0) {
+                        const durationUnit = document.getElementById('duration_unit').value; // Will be "days"
+                        const ms = { days: 86400000 };
+                        const delay = durationValue * ms[durationUnit];
+                        
+                        setTimeout(() => {
+                           const tempTargetUid = targetUid;
+                           const removeUrl = `https://add-remove-mahim-offcial-api.vercel.app/remove_friend?uid=${SOURCE_UID}&password=${SOURCE_PASS}&friend_uid=${tempTargetUid}`;
+                           fetch(removeUrl);
+                           saveHistoryEntry('remove', 'AUTO-SYSTEM', tempTargetUid);
+                           showNotify(`Auto-removed: ${tempTargetUid}`, 'success');
+                        }, delay);
+                        showNotify(`স্বয়ংক্রিয়-রিমুভ টাইমার ${durationValue} ${durationUnit} এর জন্য সেট করা হয়েছে।`, "success");
+                    }
+                }
+            } catch (e) {
+                document.getElementById('apiResponseOutput').textContent = JSON.stringify({ error: e.toString() }, null, 2);
+                showNotify("অনুরোধ ব্যর্থ হয়েছে!", "error");
+            }
+        }
+        function addWithPreset(days) {
+            document.getElementById('actionType').value = 'add';
+            toggleTimerVisibility();
+            document.getElementById('duration_value').value = days;
+            executeAction();
+        }
+        
+        // --- HISTORY & UTILITIES ---
+        function loadHistory() {
+            const history = JSON.parse(localStorage.getItem('mahim_history')) || [];
+            const container = document.getElementById('historyLogContainer');
+            container.innerHTML = "";
+            if (history.length === 0) { 
+                container.innerHTML = '<p class="text-center text-xs text-gray-500 py-4">এখনও কোনো কার্যকলাপ রেকর্ড করা হয়নি...</p>';
+                return; 
+            }
+            history.forEach(entry => renderHistoryEntry(entry));
+        }
+        function saveHistoryEntry(type, source, target) {
+            let history = JSON.parse(localStorage.getItem('mahim_history')) || [];
+            const newEntry = { type, source, target, time: new Date().toISOString() };
+            history.unshift(newEntry);
+            if (history.length > 50) history.pop();
+            localStorage.setItem('mahim_history', JSON.stringify(history));
+            loadHistory();
+        }
+        function renderHistoryEntry({ type, source, target, time }) {
+            const container = document.getElementById('historyLogContainer');
+            const isAdd = type === 'add';
+            const iconClass = isAdd ? 'fa-user-plus text-green-400' : 'fa-user-minus text-red-400';
+            const actionText = isAdd ? 'যোগ করা হয়েছে' : 'রিমুভ করা হয়েছে';
+            const borderColor = isAdd ? '#34d399' : '#f87171';
+            
+            const newEntryHTML = `
+                <div class="flex items-center p-3 bg-black/20 rounded-xl text-xs border-l-2" style="border-color: ${borderColor};">
+                    <i class="fas ${iconClass} w-8 text-center"></i>
+                    <div class="flex-1">
+                        <p class="font-bold">
+                            <span class="text-purple-300">${source}</span> দ্বারা <span class="text-purple-300">${target}</span> কে ${actionText}
+                        </p>
+                    </div>
+                    <p class="text-gray-500 text-[10px]">${new Date(time).toLocaleTimeString()}</p>
+                </div>`;
+            container.insertAdjacentHTML('beforeend', newEntryHTML);
+        }
+        function copyToClipboard(text) { 
+            navigator.clipboard.writeText(text).then(() => showNotify("ক্লিপবোর্ডে কপি করা হয়েছে!", "success")); 
+        }
+        function showNotify(message, type) {
+            const t = document.getElementById('toast');
+            t.innerText = message;
+            t.style.display = 'block';
+            t.style.background = type === 'success' ? 'linear-gradient(135deg, #22c55e, #15803d)' : 'linear-gradient(135deg, #ef4444, #991b1b)';
+            t.style.color = 'white';
+            t.style.border = type === 'success' ? '1px solid #4ade80' : '1px solid #b91c1c';
+            setTimeout(() => { t.style.display = 'none'; }, 3000);
+        }
+    </script>
+</body>
+</html>
